@@ -24,7 +24,7 @@ def login():
     claims = aws_auth.claims
     return jsonify({'claims': claims})
 
-@app.route('/oauth2/idpresponse')
+@app.route('/oauth2/idpresponse', methods=["GET", "POST"])
 def cognito_redirect():
     return "Yo Ali, this worked at least!"
     #access_token = aws_auth.get_access_token(request.args)
