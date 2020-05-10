@@ -26,9 +26,10 @@ def login():
 
 @app.route('/oauth2/idpresponse')
 def cognito_redirect():
-    access_token = aws_auth.get_access_token(request.args)
-    response = redirect(f"https://master.d2b045thd43tkr.amplifyapp.com/SignedIn/?{access_token}", code=302)
-    return response
+    return "Yo Ali, this worked at least!"
+    #access_token = aws_auth.get_access_token(request.args)
+    #response = redirect(f"https://master.d2b045thd43tkr.amplifyapp.com/SignedIn/?{access_token}", code=302)
+    #return response
 
 @app.route('/order-simulation', methods=["POST"])
 def enqueue():
