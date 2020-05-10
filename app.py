@@ -10,7 +10,7 @@ app.config['AWS_COGNITO_DOMAIN'] = 'https://epidemic-simulator-login.auth.eu-wes
 app.config['AWS_COGNITO_USER_POOL_ID'] = 'eu-west-1_nb1h2zCRl'
 app.config['AWS_COGNITO_USER_POOL_CLIENT_ID'] = '4o8211gnltlr3rcnbqgl0d93cv'
 app.config['AWS_COGNITO_USER_POOL_CLIENT_SECRET'] = '1sp24inf8vpdckkkcibjeeo90uss9favgq4icdj41iqe1195b5d0'
-app.config['AWS_COGNITO_REDIRECT_URL'] = 'http://127.0.0.1:5000/oauth2/idpresponse'
+app.config['AWS_COGNITO_REDIRECT_URL'] = 'https://127.0.0.1:5000/oauth2/idpresponse'
 
 aws_auth = AWSCognitoAuthentication(app)
 
