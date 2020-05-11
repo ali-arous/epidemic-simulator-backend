@@ -27,10 +27,6 @@ def login():
     print(jsonify({'claims': claims}))
     return jsonify({'claims': claims})
 
-@app.route('/.well-known/acme-challenge/KVd03v30OcnxabFx04YTQF9JHAyzMcHFX_h8qcd74Z8')
-def challenge():
-    return 'KVd03v30OcnxabFx04YTQF9JHAyzMcHFX_h8qcd74Z8.5fkaMOCD9vm1P8tFXSwxybkcGsXNQIkG5z2uB9mZz_0'
-
 @app.route('/order-simulation', methods=["POST"])
 def enqueue():
     data = request.json
