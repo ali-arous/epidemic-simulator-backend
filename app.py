@@ -2,11 +2,10 @@ from flask import Flask, request, jsonify, redirect
 import json
 import boto3
 from flask_awscognito import AWSCognitoAuthentication
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 
 app = Flask(__name__)
-cors = CORS(app)
-app.config['CORS_HEADERS'] = 'Content-Type'
+CORS(app)
 
 app.config['AWS_DEFAULT_REGION'] = 'eu-west-1'
 app.config['AWS_COGNITO_DOMAIN'] = 'https://epidemic-simulator-login.auth.eu-west-1.amazoncognito.com'
@@ -17,19 +16,16 @@ app.config['AWS_COGNITO_USER_POOL_CLIENT_SECRET'] = '1sp24inf8vpdckkkcibjeeo90us
 aws_auth = AWSCognitoAuthentication(app)
 
 @app.route('/')
-@cross_origin()
 def hello_world():
     return 'Hello World! This is epidemic simulator backend  :)'
 
 @app.route('/user-data', methods=["GET","POST"])
-@cross_origin()
 @aws_auth.authentication_required
 def login():
     claims = aws_auth.claims
     return jsonify({'claims': claims})
 
 @app.route('/order-simulation', methods=["POST"])
-@cross_origin()
 def enqueue():
     data = request.json
     sqs = boto3.resource('sqs', region_name='eu-west-1'
