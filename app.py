@@ -2,10 +2,8 @@ from flask import Flask, request, jsonify, redirect
 import json
 import boto3
 from flask_awscognito import AWSCognitoAuthentication
-from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)
 
 app.config['AWS_DEFAULT_REGION'] = 'eu-west-1'
 app.config['AWS_COGNITO_DOMAIN'] = 'https://epidemic-simulator-login.auth.eu-west-1.amazoncognito.com'
