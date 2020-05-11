@@ -2,14 +2,17 @@ from flask import Flask, request, jsonify, redirect
 import json
 import boto3
 from flask_awscognito import AWSCognitoAuthentication
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 app.config['AWS_DEFAULT_REGION'] = 'eu-west-1'
 app.config['AWS_COGNITO_DOMAIN'] = 'https://epidemic-simulator-login.auth.eu-west-1.amazoncognito.com'
 app.config['AWS_COGNITO_USER_POOL_ID'] = 'eu-west-1_nb1h2zCRl'
 app.config['AWS_COGNITO_USER_POOL_CLIENT_ID'] = '4o8211gnltlr3rcnbqgl0d93cv'
 app.config['AWS_COGNITO_USER_POOL_CLIENT_SECRET'] = '1sp24inf8vpdckkkcibjeeo90uss9favgq4icdj41iqe1195b5d0'
+app.config['AWS_COGNITO_REDIRECT_URL'] = "https://master.d2b045thd43tkr.amplifyapp.com/"
 
 aws_auth = AWSCognitoAuthentication(app)
 
