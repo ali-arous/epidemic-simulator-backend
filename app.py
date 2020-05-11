@@ -30,14 +30,8 @@ def login():
 @app.route('/order-simulation', methods=["POST"])
 def enqueue():
     data = request.json
-    sqs = boto3.resource('sqs', region_name='eu-west-1'
-                       # ,
-                       # aws_access_key_id='AKIAZZ3N3RKYQHRRADPM',
-                       # aws_secret_access_key='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',
-                       )
-    #arn:aws:sqs:eu-west-1:674003389105:EpidemicSimulatorTasks
+    sqs = boto3.resource('sqs', region_name='eu-west-1')
     queue = sqs.get_queue_by_name(QueueName='EpidemicSimulatorTasks')
-    # queue_url = 'https://sqs.eu-west-1.amazonaws.com/674003389105/EpidemicSimulatorTasks'
 
     # Send message to SQS queue
     response = queue.send_message(
