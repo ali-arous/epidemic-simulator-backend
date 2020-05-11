@@ -2,36 +2,34 @@ from flask import Flask, request, jsonify, redirect
 import json
 import boto3
 from flask_awscognito import AWSCognitoAuthentication
+from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 app.config['AWS_DEFAULT_REGION'] = 'eu-west-1'
 app.config['AWS_COGNITO_DOMAIN'] = 'https://epidemic-simulator-login.auth.eu-west-1.amazoncognito.com'
 app.config['AWS_COGNITO_USER_POOL_ID'] = 'eu-west-1_nb1h2zCRl'
 app.config['AWS_COGNITO_USER_POOL_CLIENT_ID'] = '4o8211gnltlr3rcnbqgl0d93cv'
 app.config['AWS_COGNITO_USER_POOL_CLIENT_SECRET'] = '1sp24inf8vpdckkkcibjeeo90uss9favgq4icdj41iqe1195b5d0'
-app.config['AWS_COGNITO_REDIRECT_URL'] = 'https://master.d2b045thd43tkr.amplifyapp.com/SignedIn'
 
 aws_auth = AWSCognitoAuthentication(app)
 
 @app.route('/')
+@cross_origin()
 def hello_world():
     return 'Hello World! This is epidemic simulator backend  :)'
 
 @app.route('/user-data', methods=["GET","POST"])
+@cross_origin()
 @aws_auth.authentication_required
 def login():
     claims = aws_auth.claims
     return jsonify({'claims': claims})
 
-@app.route('/oauth2/idpresponse', methods=["GET", "POST"])
-def cognito_redirect():
-    return "Yo Ali, this worked at least!"
-    #access_token = aws_auth.get_access_token(request.args)
-    #response = redirect(f"https://master.d2b045thd43tkr.amplifyapp.com/SignedIn/?{access_token}", code=302)
-    #return response
-
 @app.route('/order-simulation', methods=["POST"])
+@cross_origin()
 def enqueue():
     data = request.json
     sqs = boto3.resource('sqs', region_name='eu-west-1'
