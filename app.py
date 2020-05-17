@@ -6,7 +6,8 @@ from flask_awscognito import AWSCognitoAuthentication
 from flask_cors import CORS
 from bson.json_util import dumps
 import pymongo
-
+from helpers import init_seq, get_next_sequence_value
+from datetime import datetime
 app = Flask(__name__)
 CORS(app)
 
@@ -28,15 +29,66 @@ queue = sqs.get_queue_by_name(QueueName='EpidemicSimulatorTasks')
 mongo = pymongo.MongoClient(CONNECTION_STRING)
 db = mongo.get_database('simulationdb')
 users = db.get_collection('users')
-
+sims = db.get_collection('simulations')
+counters = db.get_collection('counters')
 
 @app.route('/')
 def hello_world():
     return 'Hello World! This is epidemic simulator backend  :)'
 
+# @app.route('/init')
+# def init_db():
+#     # init_seq(counters, 'user_id')
+#     init_seq(counters, 'simulation_id')
+#     return dumps(db.get_collection('counters').find())
+
 @app.route('/db')
 def test_db():
+    users.insert_one({'_id':get_next_sequence_value(counters, 'user_id') , 'name': 'Julio', 'age':'26', 'address': 'Peru'})
     return dumps(users.find())
+
+@app.route('/get-dashboard', methods=["GET", "POST"])
+@aws_auth.authentication_required
+def get_dashboard():
+    #
+    enqueued = sims.find({'user_id': aws_auth.claims['email'], 'status':'ENQUEUED'}, ['order_time'])
+    ready = sims.find({'status':'READY'}, ['order_time'])
+    enqueued_list =  [] if enqueued is None else list(enqueued)
+    ready_list = [] if ready is None else list(ready)
+    response = {
+        'enqueued_count': len(enqueued_list),
+        'enqueued_list': enqueued_list,
+        'ready_count': len(ready_list),
+        'ready_list': ready_list
+    }
+    return jsonify(response)
+
+@app.route('/get-simulation', methods=["GET", "POST"])
+def get_simulation():
+    sim_id = request.args['id']
+    #
+    s = sims.find_one({'_id': int(sim_id), 'user_id': aws_auth.claims['email']})
+    # check if the simulation belongs to the current user
+    if s is None:
+        return jsonify('YOU DO NOT HAVE PERMISSION TO ACCESS THIS SIMULATION!')
+    else:
+        return jsonify(s)
+
+@app.route('/register-user', methods=["POST"])
+def register():
+    data = request.json
+    u = users.findOne({"email":data['email']})
+    if u is None:
+        return jsonify('This username is already registered!')
+    su=users.insert_one({
+        '_id': get_next_sequence_value(counters, 'user_id'),
+        'first_name': data['firstq_name'],
+        'last_name': data['last_name'],
+        'email': data['email'],
+        'quota': 20,
+        'billig_address': data['billing_address']
+     })
+    return jsonify(su)
 
 @app.route('/user-data', methods=["GET","POST"])
 @aws_auth.authentication_required
@@ -49,107 +101,34 @@ def login():
 @aws_auth.authentication_required
 def enqueue():
     data = request.json
-
+    s=sims.insert_one({
+        '_id':get_next_sequence_value(counters, 'simulation_id'),
+        'order_time': datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+        'parameters': data,
+        'status': 'ENQUEUED',
+        'user_id': aws_auth.claims['email']
+    })
+    # return jsonify(data)
     # Send message to SQS queue
-    response = queue.send_message(
-        # QueueUrl=queue_url,
-        DelaySeconds=10,
-        MessageAttributes={
-            'population': {
-                'DataType': 'String',
-                'StringValue': str(data['population'])
+    if s is not None:
+        response = queue.send_message(
+            # QueueUrl=queue_url,
+            DelaySeconds=10,
+            MessageBody=dumps(data),
+            MessageAttributes={
+                'user_id': {
+                    'DataType': 'String',
+                    'StringValue': aws_auth.claims['email']
+                },
+                'simulation_id': {
+                    'DataType': 'String',
+                    'StringValue': str(s.inserted_id)
+                },
             },
-            'numitartions': {
-                'DataType': 'Number',
-                'StringValue': str(data['numitartions'])
-            },
-            'latitude_1': {
-                'DataType': 'Number',
-                'StringValue': str(data['latitude_1'])
-            },
-            'longitude_1': {
-                'DataType': 'Number',
-                'StringValue': str(data['longitude_1'])
-            },
-            'latitude_2': {
-                'DataType': 'Number',
-                'StringValue': str(data['latitude_2'])
-            },
-            'longitude_2': {
-                'DataType': 'String',
-                'StringValue': str(data['longitude_2'])
-            },
-            'per_ini_infection': {
-                'DataType': 'Number',
-                'StringValue': str(data['per_ini_infection'])
-            },
-            'incubation_days': {
-                'DataType': 'Number',
-                'StringValue': str(data['incubation_days'])
-            },
-            'infection_days': {
-                'DataType': 'Number',
-                'StringValue': str(data['infection_days'])
-            },
-            'prob_infection': {
-                'DataType': 'Number',
-                'StringValue': str(data['prob_infection'])
-            },
-            # 'prob_immunity': {
-            #     'DataType': 'String',
-            #     'StringValue': str(data['prob_immunity'])
-            # },
-            # 'aware_days': {
-            #     'DataType': 'Number',
-            #     'StringValue': str(data['aware_days'])
-            # },
-            # 'prob_awareness': {
-            #     'DataType': 'Number',
-            #     'StringValue': str(data['prob_awareness'])
-            # },
-            # 'prob_death': {
-            #     'DataType': 'Number',
-            #     'StringValue': str(data['prob_death'])
-            # },
-            # 'lockdown_start': {
-            #     'DataType': 'Number',
-            #     'StringValue': str(data['lockdown_start'])
-            # },
-            # 'lockdown_duration': {
-            #     'DataType': 'Number',
-            #     'StringValue': str(data['lockdown_duration'])
-            # },
-            # 'prob_warningmsg': {
-            #     'DataType': 'Number',
-            #     'StringValue': str(data['prob_warningmsg'])
-            # },
-            # 'prob_stayinghome': {
-            #     'DataType': 'Number',
-            #     'StringValue': str(data['prob_stayinghome'])
-            # },
-            # 'schoolsper1000': {
-            #     'DataType': 'String',
-            #     'StringValue': str(data['schoolsper1000'])
-            # },
-            # 'universitiesper1000': {
-            #     'DataType': 'Number',
-            #     'StringValue': str(data['universitiesper1000'])
-            # },
-            # 'officesper1000': {
-            #     'DataType': 'Number',
-            #     'StringValue': str(data['officesper1000'])
-            # },
-            # 'recreationsper1000': {
-            #     'DataType': 'Number',
-            #     'StringValue': str(data['recreationsper1000'])
-            # }
-        },
-        MessageBody=(
-            'New Simulation Order'
         )
-    )
-
-    return jsonify(response['MessageId'])
+        return jsonify(response['MessageId'])
+    else:
+        return jsonify('ERROR: Could not store the simulation order in the database')
 
 if __name__ == '__main__':
     app.run(debug=True)
