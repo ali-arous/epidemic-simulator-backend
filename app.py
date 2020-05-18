@@ -64,6 +64,7 @@ def get_dashboard():
     return jsonify(response)
 
 @app.route('/get-simulation', methods=["GET", "POST"])
+@aws_auth.authentication_required
 def get_simulation():
     sim_id = request.args['id']
     #
