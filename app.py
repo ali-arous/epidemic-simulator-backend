@@ -10,7 +10,7 @@ from helpers import init_seq, get_next_sequence_value
 from datetime import datetime
 app = Flask(__name__)
 CORS(app)
-
+import watchtower, logging
 app.config['AWS_DEFAULT_REGION'] = 'eu-west-1'
 app.config['AWS_COGNITO_DOMAIN'] = 'https://epidemic-simulator-login.auth.eu-west-1.amazoncognito.com'
 app.config['AWS_COGNITO_USER_POOL_ID'] = 'eu-west-1_nb1h2zCRl'
@@ -31,6 +31,18 @@ db = mongo.get_database('simulationdb')
 users = db.get_collection('users')
 sims = db.get_collection('simulations')
 counters = db.get_collection('counters')
+
+logging.basicConfig(level=logging.INFO)
+handler = watchtower.CloudWatchLogHandler()
+app.logger.addHandler(handler)
+logging.getLogger().addHandler(handler)
+
+@app.route('/log')
+def log():
+
+    app.logger.info("backend: Go for logging!")
+
+    return 'logged! :)'
 
 @app.route('/')
 def hello_world():
