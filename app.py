@@ -109,7 +109,7 @@ def get_simulation():
 def register():
     claims = aws_auth.claims
     json_claims = jsonify({'claims': claims})
-    data = claims["claims"]
+    data = json_claims["claims"]
     print(data)
     u = users.findOne({"email":data['email']})
     if u is None:
