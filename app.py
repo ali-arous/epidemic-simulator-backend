@@ -8,18 +8,19 @@ from bson.json_util import dumps
 import pymongo
 from helpers import init_seq, get_next_sequence_value
 from datetime import datetime
-app = Flask(__name__)
-CORS(app)
 import watchtower, logging
 import os
-app.config['AWS_DEFAULT_REGION'] = 'eu-west-1'
-app.config['AWS_COGNITO_DOMAIN'] = 'https://epidemic-simulator-login.auth.eu-west-1.amazoncognito.com'
-app.config['AWS_COGNITO_USER_POOL_ID'] = 'eu-west-1_nb1h2zCRl'
-app.config['AWS_COGNITO_USER_POOL_CLIENT_ID'] = '20ts7p2m5aui7furnu89a0fkid'
+app = Flask(__name__)
+CORS(app)
+
+app.config['AWS_DEFAULT_REGION'] = os.environ['AWS_DEFAULT_REGION']
+app.config['AWS_COGNITO_DOMAIN'] = os.environ['AWS_COGNITO_DOMAIN']
+app.config['AWS_COGNITO_USER_POOL_ID'] = os.environ['AWS_COGNITO_USER_POOL_ID']
+app.config['AWS_COGNITO_USER_POOL_CLIENT_ID'] = os.environ['AWS_COGNITO_USER_POOL_CLIENT_ID']
 app.config['AWS_COGNITO_USER_POOL_CLIENT_SECRET'] = None
-app.config['AWS_COGNITO_REDIRECT_URL'] = "https://master.d2b045thd43tkr.amplifyapp.com/"
-CONNECTION_STRING = "mongodb+srv://ali:Angel123@cluster0-b5ry8.mongodb.net/test?retryWrites=true&w=majority"
-os.environ['AWS_DEFAULT_REGION'] = 'eu-west-1'
+app.config['AWS_COGNITO_REDIRECT_URL'] = os.environ['AWS_COGNITO_REDIRECT_URL']
+CONNECTION_STRING = os.environ['CONNECTION_STRING']
+
 aws_auth = AWSCognitoAuthentication(app)
 
 # sqs bootstrap
@@ -36,11 +37,11 @@ counters = db.get_collection('counters')
 logging.basicConfig(level=logging.INFO)
 handler = watchtower.CloudWatchLogHandler()
 app.logger.addHandler(handler)
-logging.getLogger().addHandler(handler)
+logging.getLogger("werkzeug").addHandler(handler)
 
 @app.route('/log')
 def log():
-    app.logger.info("backend: Go for logging!")
+    app.logger.info("Amazing! :)")
     return 'logged! :)'
 
 @app.route('/')
@@ -72,6 +73,7 @@ def get_dashboard():
         'ready_count': len(ready_list),
         'ready_list': ready_list
     }
+    app.logger.info("DASHBOARD_VISIT: by user "+aws_auth.claims['email'])
     return jsonify(response)
 
 @app.route('/get-simulation', methods=["GET", "POST"])
@@ -82,8 +84,10 @@ def get_simulation():
     s = sims.find_one({'_id': int(sim_id), 'user_id': aws_auth.claims['email']})
     # check if the simulation belongs to the current user
     if s is None:
+        app.logger.info("SIMULATION_VIEW: by user " + aws_auth.claims['email'])
         return jsonify('YOU DO NOT HAVE PERMISSION TO ACCESS THIS SIMULATION!')
     else:
+        app.logger.warning("UNAUTHORIZED_SIMULATION_VIEW: by user " + aws_auth.claims['email'])
         return jsonify(s)
 
 @app.route('/register-user', methods=["POST"])
@@ -91,6 +95,7 @@ def register():
     data = request.json
     u = users.findOne({"email":data['email']})
     if u is None:
+        app.logger.warning("DUPLICATE_EMAIL_REGISTRATION: for email " + data['email'])
         return jsonify('This username is already registered!')
     su=users.insert_one({
         '_id': get_next_sequence_value(counters, 'user_id'),
@@ -100,6 +105,7 @@ def register():
         'quota': 20,
         'billig_address': data['billing_address']
      })
+    app.logger.info("NEW_USER_REGISRERED: with email " + data['email'])
     return jsonify(su)
 
 @app.route('/user-data', methods=["GET","POST"])
@@ -138,6 +144,7 @@ def enqueue():
                 },
             },
         )
+        app.logger.info("NEW_SIMULATION_ORDER: by user " + aws_auth.claims['email'])
         return jsonify(response['MessageId'])
     else:
         return jsonify('ERROR: Could not store the simulation order in the database')
