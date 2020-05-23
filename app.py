@@ -104,21 +104,24 @@ def get_simulation():
         app.logger.info("SIMULATION_VIEW: by user " + aws_auth.claims['email'])
         return jsonify(s)
 
-@aws_auth.authentication_required
 @app.route('/register-user', methods=["POST"])
+@aws_auth.authentication_required
 def register():
-    data = request.json
+    claims = aws_auth.claims
+    json_claims = jsonify({'claims': claims})
+    data = claims["claims"]
+    print(data)
     u = users.findOne({"email":data['email']})
     if u is None:
         app.logger.warning("DUPLICATE_EMAIL_REGISTRATION: for email " + data['email'])
         return jsonify('This username is already registered!')
     su=users.insert_one({
         '_id': get_next_sequence_value(counters, 'user_id'),
-        'first_name': data['first_name'],
-        'last_name': data['last_name'],
+        'first_name': data['given_name'],
+        'last_name': data['family_name'],
         'email': data['email'],
         'quota': 20,
-        'billig_address': data['billing_address']
+        'billig_address': data['address']['formatted']
      })
     app.logger.info("NEW_USER_REGISRERED: with email " + data['email'])
     return jsonify(su)
