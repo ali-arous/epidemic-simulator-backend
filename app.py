@@ -40,9 +40,7 @@ logging.getLogger().addHandler(handler)
 
 @app.route('/log')
 def log():
-
     app.logger.info("backend: Go for logging!")
-
     return 'logged! :)'
 
 @app.route('/')
