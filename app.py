@@ -107,9 +107,7 @@ def get_simulation():
 @app.route('/register-user', methods=["POST"])
 @aws_auth.authentication_required
 def register():
-    claims = aws_auth.claims
-    json_claims = jsonify({'claims': claims})
-    data = json_claims["claims"]
+    data = aws_auth.claims
     print(data)
     u = users.findOne({"email":data['email']})
     if u is None:
