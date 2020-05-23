@@ -64,7 +64,7 @@ def test_db():
 def buy_orders():
     data = request.json
     u = users.find_and_modify(query={"email": aws_auth.claims['email']},
-                              update={"$inc": {"quota": data['num']}})
+                              update={"$inc": {"quota": int(data['num'])}})
     if u is None:
         return jsonify('ERROR: you are not authorized to run this command!'), 403
     else:
