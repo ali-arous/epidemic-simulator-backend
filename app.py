@@ -109,10 +109,6 @@ def get_simulation():
 def register():
     data = aws_auth.claims
     print(data)
-    u = users.findOne({"email":data['email']})
-    if u is None:
-        app.logger.warning("DUPLICATE_EMAIL_REGISTRATION: for email " + data['email'])
-        return jsonify('This username is already registered!')
     su=users.insert_one({
         '_id': get_next_sequence_value(counters, 'user_id'),
         'first_name': data['given_name'],
