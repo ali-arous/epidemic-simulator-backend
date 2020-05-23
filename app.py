@@ -54,12 +54,12 @@ def hello_world():
 #     init_seq(counters, 'simulation_id')
 #     return dumps(db.get_collection('counters').find())
 
-@app.route('/db')
-def test_db():
-    users.insert_one({'_id':get_next_sequence_value(counters, 'user_id') , 'name': 'Julio', 'age':'26', 'address': 'Peru'})
-    return dumps(users.find())
+# @app.route('/db')
+# def test_db():
+#     users.insert_one({'_id':get_next_sequence_value(counters, 'user_id') , 'name': 'Julio', 'age':'26', 'address': 'Peru'})
+#     return dumps(users.find())
 
-@app.route('/buy-orders', methods=["GET", "POST"])
+@app.route('/buy-orders', methods=["POST"])
 @aws_auth.authentication_required
 def buy_orders():
     data = request.json
@@ -70,7 +70,7 @@ def buy_orders():
     else:
         return jsonify('Congratulations! You have loaded your account with '+str(data['num'])+' new orders!')
 
-@app.route('/get-dashboard', methods=["GET", "POST"])
+@app.route('/get-dashboard', methods=["GET"])
 @aws_auth.authentication_required
 def get_dashboard():
     #
@@ -90,7 +90,7 @@ def get_dashboard():
     app.logger.info("DASHBOARD_VISIT: by user "+aws_auth.claims['email'])
     return jsonify(response)
 
-@app.route('/get-simulation', methods=["GET", "POST"])
+@app.route('/get-simulation', methods=["GET"])
 @aws_auth.authentication_required
 def get_simulation():
     sim_id = request.args['id']
@@ -104,6 +104,7 @@ def get_simulation():
         app.logger.info("SIMULATION_VIEW: by user " + aws_auth.claims['email'])
         return jsonify(s)
 
+@aws_auth.authentication_required
 @app.route('/register-user', methods=["POST"])
 def register():
     data = request.json
@@ -122,7 +123,7 @@ def register():
     app.logger.info("NEW_USER_REGISRERED: with email " + data['email'])
     return jsonify(su)
 
-@app.route('/user-data', methods=["GET","POST"])
+@app.route('/user-data', methods=["GET"])
 @aws_auth.authentication_required
 def login():
     claims = aws_auth.claims
