@@ -11,6 +11,7 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app)
 import watchtower, logging
+import os
 app.config['AWS_DEFAULT_REGION'] = 'eu-west-1'
 app.config['AWS_COGNITO_DOMAIN'] = 'https://epidemic-simulator-login.auth.eu-west-1.amazoncognito.com'
 app.config['AWS_COGNITO_USER_POOL_ID'] = 'eu-west-1_nb1h2zCRl'
@@ -18,7 +19,7 @@ app.config['AWS_COGNITO_USER_POOL_CLIENT_ID'] = '20ts7p2m5aui7furnu89a0fkid'
 app.config['AWS_COGNITO_USER_POOL_CLIENT_SECRET'] = None
 app.config['AWS_COGNITO_REDIRECT_URL'] = "https://master.d2b045thd43tkr.amplifyapp.com/"
 CONNECTION_STRING = "mongodb+srv://ali:Angel123@cluster0-b5ry8.mongodb.net/test?retryWrites=true&w=majority"
-
+os.environ['AWS_DEFAULT_REGION'] = 'eu-west-1'
 aws_auth = AWSCognitoAuthentication(app)
 
 # sqs bootstrap
