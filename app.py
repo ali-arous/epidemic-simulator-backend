@@ -68,7 +68,7 @@ def buy_orders():
     if u is None:
         return jsonify('ERROR: you are not authorized to run this command!'), 403
     else:
-        return jsonify('Congratulations! You have loaded your account with '+data['num']+' new orders!')
+        return jsonify('Congratulations! You have loaded your account with '+str(data['num'])+' new orders!')
 
 @app.route('/get-dashboard', methods=["GET", "POST"])
 @aws_auth.authentication_required
